@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer theme {
+  :root {
+    --color-primary: #0F2027; /* Deep Blue, example */
+    --color-primary-light: #203A43;
+    --color-secondary: #FFFFFF;
+    --color-accent: #F3F4F6; /* Light Gray */
+  }
+}
+
+body {
+  background-color: var(--color-accent);
+  color: #111827; /* Dark grayish blue */
+}
