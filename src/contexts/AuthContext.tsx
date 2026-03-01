@@ -7,6 +7,11 @@ export interface UserProfile {
     email: string;
     role: "admin" | "student";
     created_at?: string;
+
+    // Optional fields (used in UI)
+    name?: string;
+    approved?: boolean;
+    batch_id?: string;
 }
 
 interface AuthContextType {
@@ -25,7 +30,11 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => { },
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({
+    children,
+}: {
+    children: React.ReactNode;
+}) => {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -57,32 +66,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
+        // Initial session check
         supabase.auth.getSession().then(({ data: { session } }) => {
             const currentUser = session?.user ?? null;
             setUser(currentUser);
 
             if (currentUser?.email) {
-                fetchProfile(currentUser.email).finally(() => setLoading(false));
+                fetchProfile(currentUser.email).finally(() =>
+                    setLoading(false)
+                );
             } else {
                 setLoading(false);
             }
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (_event, session) => {
-                const currentUser = session?.user ?? null;
-                setUser(currentUser);
+        // Listen for login/logout changes
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            const currentUser = session?.user ?? null;
+            setUser(currentUser);
 
-                if (currentUser?.email) {
-                    fetchProfile(currentUser.email).finally(() =>
-                        setLoading(false)
-                    );
-                } else {
-                    setProfile(null);
-                    setLoading(false);
-                }
+            if (currentUser?.email) {
+                fetchProfile(currentUser.email).finally(() =>
+                    setLoading(false)
+                );
+            } else {
+                setProfile(null);
+                setLoading(false);
             }
-        );
+        });
 
         return () => subscription.unsubscribe();
     }, []);
